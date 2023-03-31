@@ -15,6 +15,8 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
+  CollectionReference _productCollection =
+      FirebaseFirestore.instance.collection("products");
   final formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -55,53 +57,89 @@ class _ProductScreenState extends State<ProductScreen> {
           icon: Icon(Icons.add),
           label: Text('Add Products'),
         ),
-        body: ListView.builder(
-            itemCount: provider2.getNumProduct(),
-            itemBuilder: (context, index) {
-              return ListTile(
-                  title: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  decoration: BoxDecoration(
-                      color: Colors.purple[400],
-                      borderRadius: BorderRadius.circular(10)),
-                  height: 165,
-                  width: 400,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "ProductID : ${provider2.getMapData(index)['product_id']}",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                        Text(
-                          "Name : ${provider2.getMapData(index)['name']}",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                        Text(
-                          "Description : ${provider2.getMapData(index)['description']}",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                        Text(
-                          "Category : ${provider2.getMapData(index)['category']}",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                        Text(
-                          "Price : ${provider2.getMapData(index)['price']}",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                        Text(
-                          "Quantity : ${provider2.getMapData(index)['quantity']}",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ));
+        body: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection("products")
+                .doc(auth.currentUser?.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              var userdocument = snapshot.data;
+              return ListView.builder(
+                  itemCount: provider2.getNumProduct(),
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                        title: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        alignment: Alignment.centerLeft,
+                        decoration: BoxDecoration(
+                            //color: Colors.purple[400],
+                            color: Colors.purple[400],
+                            borderRadius: BorderRadius.circular(10)),
+                        height: 170,
+                        width: 400,
+                        child: Stack(fit: StackFit.expand, children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "ProductID : ${provider2.getMapData(index)['product_id']}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                                Text(
+                                  "Name : ${provider2.getMapData(index)['name']}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                                Text(
+                                  "Description : ${provider2.getMapData(index)['description']}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                                Text(
+                                  "Category : ${provider2.getMapData(index)['category']}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                                Text(
+                                  "Price : ${provider2.getMapData(index)['price']}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                                Text(
+                                  "Quantity : ${provider2.getMapData(index)['quantity']}",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.delete_forever,
+                                color: Colors.red,
+                                size: 35,
+                              ),
+                              onPressed: () async {
+                                await _productCollection
+                                    .doc(provider2
+                                        .getMapData(index)['product_id'])
+                                    .delete();
+                                provider1.removeItem(index);
+                                provider2.removeItem(index);
+                              },
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ));
+                  });
             }));
   }
 
